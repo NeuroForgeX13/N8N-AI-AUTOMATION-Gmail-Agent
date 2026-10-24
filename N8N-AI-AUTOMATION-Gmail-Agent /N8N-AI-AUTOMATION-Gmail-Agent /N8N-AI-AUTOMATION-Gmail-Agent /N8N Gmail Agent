@@ -1,0 +1,206 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -496,
+        -32
+      ],
+      "id": "eacbc99b-2344-42d1-b5c2-bb89c4a8b31a",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WY4CbeSeGgJduuCY",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputText": "={{ $json.payload }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "order",
+              "description": "when any email come with the text inside include new order it will separated"
+            },
+            {
+              "category": "inquiry",
+              "description": "if any email include words inquiry of customer is asking any type of question, need to separated"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1.1,
+      "position": [
+        -192,
+        -112
+      ],
+      "id": "77a263c3-d32f-44ca-b00c-091e0a706917",
+      "name": "Text Classifier"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -256,
+        224
+      ],
+      "id": "e97ed7a6-9a6b-46d3-9215-245fdb35bf4b",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Please write a professional email reply to an inquiry about placing an order."
+            }
+          ]
+        },
+        "simplify": false,
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        336,
+        -96
+      ],
+      "id": "9be44614-c937-4a03-8e35-e425f4b504f0",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "=Re: {{ $('Gmail Trigger').item.json.Subject }}",
+        "message": "={{ $('Message a model').item.json.output[0].content[0].text }}",
+        "options": {
+          "threadId": "={{ $('Text Classifier').item.json.threadId }}",
+          "sendTo": "=git986821@gmail.com"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        160,
+        224
+      ],
+      "id": "1041a372-f831-4989-9857-83b07856f63d",
+      "name": "Create a draft",
+      "webhookId": "4ac5d4f4-b039-4f76-9d6f-a7e641e02c12",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WY4CbeSeGgJduuCY",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Classifier": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Create a draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "b2dd953f-de5f-4132-ae57-11b6a16173ec",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a6a55e155d9d03a14f42f64705b91125097879edfaaf217e9bebc3f5511db292"
+  },
+  "nodeGroups": [],
+  "id": "G8eEQOV7j7uFhtz9",
+  "tags": []
+}
